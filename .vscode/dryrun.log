@@ -1,0 +1,5 @@
+make.exe --dry-run --keep-going --print-directory
+make: Entering directory 'd:/Beeb/beebScreen'
+make: 'test' is up to date.
+make: Leaving directory 'd:/Beeb/beebScreen'
+ 
