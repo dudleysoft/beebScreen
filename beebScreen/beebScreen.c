@@ -192,6 +192,9 @@ int bsRemapBeebPalette[30]={
   MAPRGB(15,8,0),MAPRGB(15,0,8),MAPRGB(8,15,0),MAPRGB(0,15,8),MAPRGB(8,0,15),MAPRGB(0,8,15)
 }; // I know the beeb doesn't have half bright, but this is the only way to make this work we dither with black for the half bright
 
+// Remap palette for mode 0 remapping to grey scale values
+int bsRemapMode0[16]={0x0000,0x1101,0x2202,0x3303,0x4404,0x5505,0x6606,0x7707,0x8808,0x9909,0xaa0a,0xbb0b,0xcc0c,0xdd0d,0xee0e,0xff0f};
+
 void beebScreen_SendPal(int *pal,int count)
 {
     if (bsNula)
@@ -208,9 +211,21 @@ void beebScreen_SendPal(int *pal,int count)
     {
         switch(bsMode)
         {
+            // 2 colour modes, we'll map to a greyscale dither pattern
+        case 0:
+        case 3:
+        case 4:
+        case 6:
+            beebScreen_CreateRemapColours(pal, bsRemapMode0, 16, count);
+            break;
+
+            // Mode 2 uses a 2/2 dither pattern with 30 entries
         case 2:
             beebScreen_CreateRemapColours(pal, bsRemapBeebPalette, 30, count);
             break;
+
+            // Other modes are more complex since we cant guarantee which colours will be available on
+            // non-NULA builds, we can choose 4 from 8, so we're limited.
         default:
             // TODO - Remap to reduced colour palette - needs work since we need to define the colour palette
             for(int i=0; i < count; ++i)
@@ -596,14 +611,62 @@ void beebScreen_FlipCallback(void (*callback)(void))
 
 unsigned char beebBuffer[20480];
 
-void convert2Col(unsigned char *map)
-{
-
-}
+unsigned char dither2[16][4]={
+    {0x00,0x00,0x00,0x00},  // 0  - &0000
+    {0x11,0x00,0x00,0x00},  // 1  - &1101
+    {0x11,0x00,0x44,0x00},  // 2  - &2202
+    {0x11,0x00,0x44,0x88},  // 3  - &3303
+    {0x11,0x22,0x44,0x88},  // 4  - &4404
+    {0x55,0x22,0x44,0x88},  // 5  - &5505
+    {0x55,0x22,0x55,0x88},  // 6  - &6606
+    {0x55,0x22,0x55,0xaa},  // 7  - &7707
+    {0x55,0xaa,0x55,0xaa},  // 8  - &8808
+    {0x77,0xaa,0x55,0xaa},  // 9  - &9909
+    {0x77,0xaa,0x77,0xaa},  // 10 - &aa0a
+    {0x77,0xaa,0x77,0xee},  // 11 - &bb0b
+    {0x77,0xee,0x77,0xee},  // 12 - &cc0c
+    {0xff,0xee,0x77,0xee},  // 13 - &dd0d
+    {0xff,0xee,0xff,0xff},  // 14 - &ee0e
+    {0xff,0xff,0xff,0xff},  // 15 - &ff0f
+};
 
 void convert2Dither(unsigned char *map)
 {
+	unsigned char *src;
+	unsigned char *dest;
+	int x;
+    int yPos=0;
 
+    int w = bsScreenWidth;
+    int charW = bsScreenWidth >> 3;
+    int Xstep = (bsBufferW << 8) / bsScreenWidth;
+    int Ystep = (bsBufferH << 8) / bsScreenHeight;
+    int line = 0;
+
+	do
+	{
+        int y = yPos>>8;
+    	src = &bsBuffer[y * bsBufferW];
+        int xPos = 0;
+        int addr = ((line>>3) * w) + (line & 7);
+        //printf("addr: %04x\n",addr);
+    	dest = &beebBuffer[addr];
+		for(x=0; x< charW; x++)
+		{
+            int value = 0;
+            for(int x2=0;x2<8;++x2)
+            {
+                int pix = map ? map[src[xPos>>8]] : src[xPos>>8];
+                xPos+=Xstep;
+                value |= dither2[pix & 15][line&3] & (1<<x2);
+            }
+
+			*dest = value;
+			dest+=8;
+		}
+		yPos+=Ystep;
+        line++;
+	} while (line < bsScreenHeight);
 }
 
 const unsigned char mode1Mask[] = {
@@ -632,75 +695,82 @@ void convert4Col(unsigned char *map)
 	unsigned char *src;
 	unsigned char *dest;
 	int x;
-    int y=0;
-
-	src = &bsBuffer[y * bsBufferW];
+    int yPos=0;
 
     int w = bsScreenWidth * 2;
     int charW = bsScreenWidth >> 2;
-    int Xstep = bsBufferW / bsScreenWidth;
-    int Ystep = bsBufferH / bsScreenHeight;
+    int Xstep = (bsBufferW << 8) / bsScreenWidth;
+    int Ystep = (bsBufferH << 8) / bsScreenHeight;
+    int line = 0;
 
 	do
 	{
-        int addr = ((y>>3) * w) + (y & 7);
+        int y = yPos>>8;
+    	src = &bsBuffer[y * bsBufferW];
+        int xPos = 0;
+        int addr = ((line>>3) * w) + (line & 7);
         //printf("addr: %04x\n",addr);
     	dest = &beebBuffer[addr];
 		for(x=0; x< charW; x++)
 		{
-			int pix1 = map ? map[*src] : *src;
-			src+=Xstep;
-			int pix2 = map ? map[*src] : *src;
-			src+=Xstep;
-            int pix3 = map ? map[*src] : *src;
-            src+=Xstep;
-            int pix4 = map ? map[*src] : *src;
-            src+=Xstep;
+			int pix1 = map ? map[src[xPos>>8]] : src[xPos>>8];
+			xPos+=Xstep;
+			int pix2 = map ? map[src[xPos>>8]] : src[xPos>>8];
+			xPos+=Xstep;
+			int pix3 = map ? map[src[xPos>>8]] : src[xPos>>8];
+			xPos+=Xstep;
+			int pix4 = map ? map[src[xPos>>8]] : src[xPos>>8];
+			xPos+=Xstep;
 
 			*dest = (mode1Mask[pix1]<<3) +(mode1Mask[pix2]<<2) + (mode1Mask[pix3]<<1) + mode1Mask[pix4];
 			dest+=8;
 		}
-		y++;
+		yPos+=Ystep;
+        line++;
 
-	} while (y < bsScreenHeight);
+	} while (line < bsScreenHeight);
 }
 
 void convert4Dither(unsigned char *map)
 {
-	unsigned char *src;
+    unsigned char *src;
 	unsigned char *dest;
 	int x;
-    int y=0;
-
-	src = &bsBuffer[y * bsBufferW];
+    int yPos=0;
 
     int w = bsScreenWidth * 2;
     int charW = bsScreenWidth >> 2;
-    int Xstep = bsBufferW / bsScreenWidth;
-    int Ystep = bsBufferH / bsScreenHeight;
+    int Xstep = (bsBufferW << 8) / bsScreenWidth;
+    int Ystep = (bsBufferH << 8) / bsScreenHeight;
+    int line = 0;
 
 	do
 	{
-        int addr = ((y>>3) * w) + (y & 7);
+        int y = yPos>>8;
+    	src = &bsBuffer[y * bsBufferW];
+        int xPos = 0;
+        int addr = ((line>>3) * w) + (line & 7);
         //printf("addr: %04x\n",addr);
     	dest = &beebBuffer[addr];
 		for(x=0; x< charW; x++)
 		{
-			int pix1 = map ? map[*src] : *src;
-			src+=Xstep;
-			int pix2 = map ? map[*src] : *src;
-			src+=Xstep;
-			int pix3 = map ? map[*src] : *src;
-			src+=Xstep;
-			int pix4 = map ? map[*src] : *src;
-			src+=Xstep;
+			int pix1 = map ? map[src[xPos>>8]] : src[xPos>>8];
+			xPos+=Xstep;
+			int pix2 = map ? map[src[xPos>>8]] : src[xPos>>8];
+			xPos+=Xstep;
+			int pix3 = map ? map[src[xPos>>8]] : src[xPos>>8];
+			xPos+=Xstep;
+			int pix4 = map ? map[src[xPos>>8]] : src[xPos>>8];
+			xPos+=Xstep;
+
 			*dest = (y & 1) ? ((mode1Dither2[pix1]<<3) + (mode1Dither1[pix2]<<2) + (mode1Dither2[pix3]<<1) + mode1Dither1[pix4])
             : ((mode1Dither1[pix1]<<3) + (mode1Dither2[pix2]<<2) + (mode1Dither1[pix3]<<1) + mode1Dither2[pix4]);
 			dest+=8;
 		}
-		y++;
+		yPos+=Ystep;
+        line++;
 
-	} while (y < bsScreenHeight);
+	} while (line < bsScreenHeight);
 }
 
 const unsigned char mode2Mask[] = {
@@ -1067,10 +1137,8 @@ void beebScreen_Flip()
         case 4:
         case 3:
         case 6:
-            if (bsNula)
-                convert2Col(bsNulaRemap);
-            else
-                convert2Dither(bsRemap);
+            // Only really makes sense to dither in mode 0,3,4 or 6
+            convert2Dither(bsRemap);
             break;
         case 1:
         case 5:

@@ -8,7 +8,7 @@ make: *** No rule to make target 'all'.  Stop.
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Tue Jun 22 11:52:40 2021
+# Make data base, printed on Thu Jun 24 16:17:16 2021
 
 # Variables
 
@@ -25,7 +25,7 @@ USERPROFILE = C:\Users\dudle
 # environment
 LOCALAPPDATA = C:\Users\dudle\AppData\Local
 # environment
-VSCODE_IPC_HOOK_EXTHOST = \\.\pipe\vscode-ipc-d3835405-b8db-46b5-8516-847df25a9dec-sock
+VSCODE_IPC_HOOK_EXTHOST = \\.\pipe\vscode-ipc-36858449-c82f-4e5f-9e60-34c697d48472-sock
 # environment
 VSCODE_CWD = C:\Users\dudle\AppData\Local\Programs\Microsoft VS Code
 # environment
@@ -41,7 +41,7 @@ MAKE_COMMAND := C:/ProgramData/chocolatey/lib/make/tools/install/bin/make.exe
 # automatic
 @D = $(patsubst %/,%,$(patsubst %\,%,$(dir $@)))
 # environment
-CHROME_CRASHPAD_PIPE_NAME = \\.\pipe\crashpad_5980_XCHMTWSQFTDNFJUN
+CHROME_CRASHPAD_PIPE_NAME = \\.\pipe\crashpad_9896_MRNIPWNLHLACMOFC
 # environment
 VSCODE_HANDLES_UNCAUGHT_ERRORS = true
 # default
@@ -93,7 +93,7 @@ MAKEFILE_LIST := Makefile
 # environment
 VSCODE_VERBOSE_LOGGING = true
 # environment
-VSCODE_PID = 5980
+VSCODE_PID = 9896
 # automatic
 ?D = $(patsubst %/,%,$(patsubst %\,%,$(dir $?)))
 # automatic
@@ -180,8 +180,7 @@ MAKE_VERSION := 4.3
 VBCC = D:\Beeb\vbcc
 # environment
 PROGRAMFILES(X86) = C:\Program Files (x86)
-# e 
-nvironment
+# environment
 USERDOMAIN_ROAMINGPROFILE = DESKTOP-5ATHJNK
 # environment
 NUMBER_OF_PROCESSORS = 12
@@ -246,9 +245,9 @@ PROCESSOR_IDENTIFIER = AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD
 
 # Directories
 
-# . (key d:/Beeb/beebScreen, mtime 1624359029): 28 files, no impossibilities.
+# . (key d:/Beeb/beebScreen, mtime 1624361994): 25 files, no impossibilities.
 
-# 28 files, no impossibilities in 1 directories.
+# 25 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -343,7 +342,6 @@ armtubeio.o:
 
 # Not a target:
 .DEFAULT:
- 
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
@@ -410,12 +408,12 @@ beebScreen/extraCode.bin: beebScreen/beebCode.asm
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 47 / storage = 522 B / avg = 11 B
-# current buf: size = 8174 B / used = 522 B / count = 47 / avg = 11 B
+# strcache buffers: 1 (0) / strings = 49 / storage = 537 B / avg = 10 B
+# current buf: size = 8174 B / used = 537 B / count = 49 / avg = 10 B
 
-# strcache performance: lookups = 82 / hit rate = 42%
+# strcache performance: lookups = 79 / hit rate = 37%
 # hash-table stats:
-# Load=47/8192=1%, Rehash=0, Collisions=0/82=0%
-# Finished Make data base on Tue Jun 22 11:52:40 2021
+# Load=49/8192=1%, Rehash=0, Collisions=0/79=0%
+# Finished Make data base on Thu Jun 24 16:17:16 2021
 
  

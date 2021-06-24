@@ -1,5 +1,22 @@
-make.exe --dry-run --keep-going --print-directory
+make.exe --dry-run --always-make --keep-going --print-directory
 make: Entering directory 'd:/Beeb/beebScreen'
-make: 'test' is up to date.
+cd beebScreen; ./mkasm.bat
+ 
+cd beebScreen; ./mkasm.bat
+arm-none-eabi-gcc -nostartfiles -O2 -mcpu=arm7tdmi -mtune=arm7tdmi -fno-delete-null-pointer-checks -fdata-sections -ffunction-sections --specs=nano.specs --specs=nosys.specs -u _printf_float -c main.c -o main.o
+ 
+arm-none-eabi-gcc    -c -o armc-start.o armc-start.S
+ 
+arm-none-eabi-gcc -nostartfiles -O2 -mcpu=arm7tdmi -mtune=arm7tdmi -fno-delete-null-pointer-checks -fdata-sections -ffunction-sections --specs=nano.specs --specs=nosys.specs -u _printf_float -c armtubeio.c -o armtubeio.o
+ 
+arm-none-eabi-gcc -nostartfiles -O2 -mcpu=arm7tdmi -mtune=arm7tdmi -fno-delete-null-pointer-checks -fdata-sections -ffunction-sections --specs=nano.specs --specs=nosys.specs -u _printf_float -c armtubeswis.s -o armtubeswis.o
+ 
+arm-none-eabi-gcc -nostartfiles -O2 -mcpu=arm7tdmi -mtune=arm7tdmi -fno-delete-null-pointer-checks -fdata-sections -ffunction-sections --specs=nano.specs --specs=nosys.specs -u _printf_float -c beebScreen/beebScreen.c -o beebScreen/beebScreen.o
+ 
+arm-none-eabi-gcc -nostartfiles -O2 -mcpu=arm7tdmi -mtune=arm7tdmi -fno-delete-null-pointer-checks -fdata-sections -ffunction-sections --specs=nano.specs --specs=nosys.specs -u _printf_float -Wl,--gc-sections -Wl,--no-print-gc-sections -Wl,-T,rpi.X -Wl,-lm main.o armc-start.o armtubeio.o armtubeswis.o beebScreen/beebScreen.o -lc -lm -o temp
+arm-none-eabi-objcopy -O binary temp test
+rm temp
+echo test 0000F000 0000F000 > test.inf
+echo test WR \(0\) F000 F000 > \#\#\#BBC.inf
 make: Leaving directory 'd:/Beeb/beebScreen'
  

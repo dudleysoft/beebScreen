@@ -35,13 +35,13 @@ int main(int argc,char *argv[])
     fflush(stdout);
     waitForKey();
 
-    beebScreen_Init(2,BS_INIT_DOUBLE_BUFFER);
+    beebScreen_Init(0,BS_INIT_DOUBLE_BUFFER);
     beebScreen_SetBuffer(buffer,BS_BUFFER_FORMAT_8BPP,160,256);
     beebScreen_SendPal(pal,16);
 
     for(int i=0;i<40960;i++)
     {
-        buffer[i]=(i/320)&15;
+        buffer[i]=(i/640)&15;
     }
 
     beebScreen_Flip();
