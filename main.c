@@ -37,6 +37,8 @@ int main(int argc,char *argv[])
 
     beebScreen_Init(0,BS_INIT_DOUBLE_BUFFER);
     beebScreen_SetBuffer(buffer,BS_BUFFER_FORMAT_8BPP,160,256);
+    beebScreen_SetGeometry(512,192,TRUE);
+    beebScreen_UseDefaultScreenBases();
     beebScreen_SendPal(pal,16);
 
     for(int i=0;i<40960;i++)
@@ -44,8 +46,35 @@ int main(int argc,char *argv[])
         buffer[i]=(i/640)&15;
     }
 
-    beebScreen_Flip();
-    waitForKey();
+    if (argc==1)
+    {
+        beebScreen_Flip();
+        waitForKey();
+    }
 
+    int i=1;
+    int first = TRUE;
+    while (i < argc)
+    {
+        FILE *fhand = fopen(argv[i],"rb");
+        fseek(fhand,0x436,SEEK_SET);
+        fread(buffer, 160, 256, fhand);
+        fclose(fhand);
+        if (!first)
+        {
+            waitForKey();
+        }
+        else
+        {
+            first = FALSE;
+        }
+        beebScreen_Flip();
+        i++;
+        if (i==argc)
+        {
+            i=1;
+        }
+    }
+    waitForKey();
     beebScreen_Quit();
 }

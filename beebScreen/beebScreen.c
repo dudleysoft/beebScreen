@@ -142,13 +142,7 @@ unsigned char beebScreen_FindPalette(int colour, int *remap,int total)
 
     return idx;
 }
-/**
- * Creates Remapping between the our palette and the colours used in the screen
- * @param source - source palette we're matching colours from
- * @param remap - palette we're remapping the colours to
- * @param total - total number of colours to map to
- * @param len - total number of colours in the original palette
- */
+
 void beebScreen_CreateRemapColours(int *source, int *remap, int total, int len)
 {
 	for(int col = 0; col < len; ++col)
@@ -658,7 +652,7 @@ void convert2Dither(unsigned char *map)
             {
                 int pix = map ? map[src[xPos>>8]] : src[xPos>>8];
                 xPos+=Xstep;
-                value |= dither2[pix & 15][line&3] & (1<<x2);
+                value |= dither2[pix & 15][line&3] & (1<<(7-x2));
             }
 
 			*dest = value;

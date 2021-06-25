@@ -23,7 +23,7 @@ The all you need to do is run **make**.
 Firstly call **beebScreen_Init** which takes the beeb video mode and init flags.
 
 Next create a memory buffer (or use the one provided by the game), call **beebScreen_SetBuffer** to tell
-beebScreen where the client video buffer is, currently only 8BB is supported, along with the width and height
+beebScreen where the client video buffer is, currently only 8BPP is supported, along with the width and height
 of the buffer (beebScreen automagically scales to the selected output resolution)
 
 If you are using NULA then there are functions to convert the palette to a NULA palette, including reducing to a dynamic 16 colours
@@ -34,4 +34,6 @@ be displaying the contents of the current client display buffer on it's screen.
 
 ## Documentation
 
-TODO: Look at beebScreen/beebScreen.h which has full comment documentation for all the exported beebScreen functions.
+Look at beebScreen/beebScreen.h for details on all the functions and defines, a more detailed description of how to use the library will come
+at a later point, for now you can take a look at https://github.com/dudleysoft/beebQuake/blob/master/vid_beeb.c for an example of how it's used in
+a real life situation.
