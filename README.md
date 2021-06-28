@@ -34,6 +34,7 @@ be displaying the contents of the current client display buffer on it's screen.
 
 ## Documentation
 
-Look at beebScreen/beebScreen.h for details on all the functions and defines, a more detailed description of how to use the library will come
-at a later point, for now you can take a look at https://github.com/dudleysoft/beebQuake/blob/master/vid_beeb.c for an example of how it's used in
+The github pages documentation can be found here: https://dudleysoft.github.io/beebScreen/html/index.html
+
+You can take a look at https://github.com/dudleysoft/beebQuake/blob/master/vid_beeb.c for an example of how it's used in
 a real life situation.
