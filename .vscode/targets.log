@@ -8,7 +8,7 @@ make: *** No rule to make target 'all'.  Stop.
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Mon Jun 28 09:04:44 2021
+# Make data base, printed on Mon Jul 05 08:59:43 2021
 
 # Variables
 
@@ -25,23 +25,23 @@ USERPROFILE = C:\Users\dudle
 # environment
 LOCALAPPDATA = C:\Users\dudle\AppData\Local
 # environment
-VSCODE_IPC_HOOK_EXTHOST = \\.\pipe\vscode-ipc-dc00fd23-098d-44c7-b17e-9ddf1fea36f2-sock
+VSCODE_IPC_HOOK_EXTHOST = \\.\pipe\vscode-ipc-20029bb9-7ee5-4a28-9306-c971421711a6-sock
 # environment
 VSCODE_CWD = C:\Users\dudle\AppData\Local\Programs\Microsoft VS Code
 # environment
 CHOCOLATEYINSTALL = C:\ProgramData\chocolatey
 # environment
-SYSTEMROOT = C:\Windows
+SYSTEMROOT = C:\WINDOWS
 # environment
 PROCESSOR_LEVEL = 23
 # environment
-PSMODULEPATH = C:\Program Files\WindowsPowerShell\Modules;C:\Windows\system32\WindowsPowerShell\v1.0\Modules
+PSMODULEPATH = C:\Program Files\WindowsPowerShell\Modules;C:\WINDOWS\system32\WindowsPowerShell\v1.0\Modules
 # default
 MAKE_COMMAND := C:/ProgramData/chocolatey/lib/make/tools/install/bin/make.exe
 # automatic
 @D = $(patsubst %/,%,$(patsubst %\,%,$(dir $@)))
 # environment
-CHROME_CRASHPAD_PIPE_NAME = \\.\pipe\crashpad_5500_SUUKVDMJAXTLOCCG
+CHROME_CRASHPAD_PIPE_NAME = \\.\pipe\crashpad_13204_SRJWIJGUUDOYWWVH
 # environment
 VSCODE_HANDLES_UNCAUGHT_ERRORS = true
 # default
@@ -93,7 +93,7 @@ MAKEFILE_LIST := Makefile
 # environment
 VSCODE_VERBOSE_LOGGING = true
 # environment
-VSCODE_PID = 5500
+VSCODE_PID = 13204
 # automatic
 ?D = $(patsubst %/,%,$(patsubst %\,%,$(dir $?)))
 # automatic
@@ -109,7 +109,8 @@ ONEDRIVECONSUMER = C:\Users\dudle\OneDrive
 # default
 MAKE_HOST := Windows32
 # environment
-PROGRAMDATA = C:\ProgramData
+PROGRAMDATA = C:\ 
+ProgramData
 # default
 SHELL := C:/Program Files/Git/usr/bin/sh.exe
 # environment
@@ -119,25 +120,24 @@ MAKECMDGOALS := all
 # environment
 DRIVERDATA = C:\Windows\System32\Drivers\DriverData
 # environment
-COMSPEC = C:\Windows\system32\cmd.exe
+COMSPEC = C:\WINDOWS\system32\cmd.exe
 # environment
 PICO_SDK_PATH = D:\projects\pico-sdk
 # environment
-WINDIR = C:\Windows
+WINDIR = C:\WINDOWS
 # environment
 MAKELEVEL := 0
 # default
 MAKE = $(MAKE_COMMAND)
 # environment
-PATH = C:\Program Files (x86)\Common Files\Oracle\Java\javapath;C:\Program Files\ImageMagick-7.0.10-Q16-HDRI;C:\Program Files\Oculus\Support\oculus-runtime;C:\Python39\Scripts\;C:\Python39\;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\ProgramData\chocolatey\bin;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\NVIDIA Corporation\NVIDIA NvDLISR;C:\Program Files\nodejs\;c:\cygwin64\bin;C:\Program Files\Git\cmd;C:\Program Files\Git\mingw64\bin;C:\Program Files\Git\usr\bin;C:\Program Files\CodeAndWeb\TexturePacker\bin;C:\Program Files (x86)\QuickTime\QTSystem\;C:\Program Files\CMake\bin;C:\Program Files\Git LFS;C:\Program Files\PuTTY\;C:\Program Files\doxygen\bin;C:\Program Files (x86)\GNU Arm Embedded Toolchain\10 2020-q4-major\bin;C:\Users\dudle\AppData\Local\Microsoft\WindowsApps;C:\Users\dudle\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\dudle\AppData\Roaming\npm;D:\gbdk\bin;D:\Beeb\vbcc\bin;
+PATH = C:\Program Files (x86)\Common Files\Oracle\Java\javapath;C:\Program Files\ImageMagick-7.0.10-Q16-HDRI;C:\Program Files\Oculus\Support\oculus-runtime;C:\Python39\Scripts\;C:\Python39\;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\ProgramData\chocolatey\bin;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\NVIDIA Corporation\NVIDIA NvDLISR;C:\Program Files\nodejs\;c:\cygwin64\bin;C:\Program Files\Git\cmd;C:\Program Files\Git\mingw64\bin;C:\Program Files\Git\usr\bin;C:\Program Files\CodeAndWeb\TexturePacker\bin;C:\Program Files (x86)\QuickTime\QTSystem\;C:\Program Files\CMake\bin;C:\Program Files\Git LFS;C:\Program Files\PuTTY\;C:\Program Files\doxygen\bin;;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files (x86)\GNU Arm Embedded Toolchain\10 2020-q4-major\bin;C:\Users\dudle\AppData\Local\Microsoft\WindowsApps;C:\Users\dudle\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\dudle\AppData\Roaming\npm;D:\gbdk\bin;D:\Beeb\vbcc\bin;
 # environment
 COMPUTERNAME = DESKTOP-5ATHJNK
 # default
 MAKEFILES := 
 # automatic
 ^F = $(notdir $^)
-# 
- environment
+# environment
 PROMPT = $P$G
 # environment
 CHOCOLATEYLASTPATHUPDATE = 132597662206590976
@@ -169,6 +169,8 @@ GNUMAKEFLAGS :=
 GIT_LFS_PATH = C:\Program Files\Git LFS
 # environment
 OS = Windows_NT
+# environment
+__COMPAT_LAYER = DetectorsShimLog
 # makefile
 .DEFAULT_GOAL := test
 # makefile (from 'Makefile', line 6)
@@ -234,11 +236,12 @@ CC = arm-none-eabi-gcc
 # makefile (from 'Makefile', line 5)
 OBJCOPY = arm-none-eabi-objcopy
 # makefile (from 'Makefile', line 23)
-LD_FLAGS := -Wl,--gc-sections -Wl,--no-print-gc-sections -Wl,-T,rpi.X -Wl,-lm
+LD_FLAGS := -Wl,--gc-sections -Wl,--no-print-gc-sections -Wl,-T,rpi.X -Wl 
+,-lm
 # environment
 PROCESSOR_IDENTIFIER = AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD
 # variable set hash-table stats:
-# Load=112/1024=11%, Rehash=0, Collisions=14/144=10%
+# Load=113/1024=11%, Rehash=0, Collisions=14/145=10%
 
 # Pattern-specific Variable Values
 
@@ -246,7 +249,7 @@ PROCESSOR_IDENTIFIER = AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD
 
 # Directories
 
-# . (key d:/Beeb/beebScreen, mtime 1624620731): 39 files, no impossibilities.
+# . (key d:/Beeb/beebScreen, mtime 1625399121): 39 files, no impossibilities.
 
 # 39 files, no impossibilities in 1 directories.
 
@@ -301,8 +304,7 @@ beebScreen/beebCode.bin: beebScreen/beebCode.asm
 #  File has not been updated.
 
 cleanall: clean depclean
-#  Implicit rule search has not been d 
-one.
+#  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
 
@@ -416,6 +418,7 @@ beebScreen/extraCode.bin: beebScreen/beebCode.asm
 # strcache performance: lookups = 93 / hit rate = 37%
 # hash-table stats:
 # Load=58/8192=1%, Rehash=0, Collisions=0/93=0%
-# Finished Make data base on Mon Jun 28 09:04:44 2021
+# Finished Make data base on 
+ Mon Jul 05 08:59:43 2021
 
  
