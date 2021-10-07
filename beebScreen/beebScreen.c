@@ -16,6 +16,8 @@ int bsScreenBase[2];
 int bsMode;
 int bsDoubleBuffer;
 int bsNula;
+int bsRgb2Hdmi;
+int bsPiVdu;
 int bsMouse;
 int bsShowPointer;
 int bsMouseX;
@@ -32,6 +34,7 @@ int bsBufferSize;
 int bsHostLomem;
 unsigned char bsFrameCounter;
 unsigned char backBuffer[2][20480];
+unsigned char *piVduBuffer;
 void (*bsCallback)(void);
 
 // Load into UDG memory at &C00, as long as we don't use characters 224-255 we'll be fine
@@ -189,6 +192,9 @@ int bsRemapBeebPalette[30]={
 // Remap palette for mode 0 remapping to grey scale values
 int bsRemapMode0[16]={0x0000,0x1101,0x2202,0x3303,0x4404,0x5505,0x6606,0x7707,0x8808,0x9909,0xaa0a,0xbb0b,0xcc0c,0xdd0d,0xee0e,0xff0f};
 
+int bsHdmiPal[16];
+int bsHdmiCols;
+
 void beebScreen_SendPal(int *pal,int count)
 {
     if (bsNula)
@@ -201,8 +207,29 @@ void beebScreen_SendPal(int *pal,int count)
             _VDU(pal[i]>>8);
         }
     }
+    else if (bsPiVdu)
+    {
+        for(int i=0;i<count;++i)
+        {
+            _VDU(19);
+            _VDU(i);
+            _VDU(16);
+            _VDU((pal[i]&0x0f)<<4);
+            _VDU((pal[i]&0x0f00)>>4);
+            _VDU((pal[i]>>8)&0xf0);
+        }
+    }
     else
     {
+        if (bsRgb2Hdmi)
+        {
+            bsHdmiCols = count > 16 ? 16 : count;
+            for(int i=0;i<bsHdmiCols;++i)
+            {
+                bsHdmiPal[i]=pal[i];
+            }
+        }
+
         switch(bsMode)
         {
             // 2 colour modes, we'll map to a greyscale dither pattern
@@ -330,9 +357,12 @@ void beebScreen_CreateDynamicPalette(int* inPal,unsigned char *palMap,int colour
 
 void sendCrtc(int reg,int value)
 {
-    _VDU(BS_CMD_SEND_CRTC);
-    _VDU(reg);
-    _VDU(value);
+    if (!bsPiVdu)
+    {
+        _VDU(BS_CMD_SEND_CRTC);
+        _VDU(reg);
+        _VDU(value);
+    }
 }
 
 void sendScreenbase(int addr)
@@ -345,13 +375,20 @@ void beebScreen_SetMode(int mode)
 {
     bsMode = mode;
     _VDU(22);
-    _VDU(mode);
+    if (bsRgb2Hdmi && mode == 2)
+    {
+        _VDU(0);
+    }
+    else
+    {
+        _VDU(mode);
+    }
 
     int bufferSize;
 
     // // Setup video mode
-    _VDU(22);
-    _VDU(mode);
+    // _VDU(22);
+    // _VDU(mode);
     // // Turn off cursor
     sendCrtc(10,32);
 
@@ -409,6 +446,20 @@ void beebScreen_SetMode(int mode)
         bsScreenBase[1]=0x4000;
         bufferSize=0x2000;
         break;
+    case 9:
+        bsScreenWidth=320;
+        bsScreenHeight=256;
+        bsColours=16;
+        bsScreenBase[0]=bsScreenBase[1]=(int)piVduBuffer;
+        bufferSize = 320*256;
+        break;
+    case 13:
+        bsScreenWidth=320;
+        bsScreenHeight=256;
+        bsColours=256;
+        bsScreenBase[0]=bsScreenBase[1]=(int)piVduBuffer;
+        bufferSize = 320*256;
+        break;
     }
 
     bsBuffer = NULL;
@@ -448,10 +499,10 @@ void beebScreen_Init(int mode, int flags)
     // Set ESCAPE to generate the key value
     _swi(OS_Byte,_INR(0,1),229,1);
 
-    // Use same routine we've made external
-    beebScreen_SetMode(mode);
 
     bsNula = flags & BS_INIT_NULA;
+    bsRgb2Hdmi = flags & BS_INIT_RGB2HDMI;
+    bsPiVdu = flags & BS_INIT_PIUVDU;
     bsDoubleBuffer = flags & BS_INIT_DOUBLE_BUFFER;
     bsMouse = flags & BS_INIT_MOUSE;
     bsShowPointer = 0;
@@ -461,12 +512,19 @@ void beebScreen_Init(int mode, int flags)
     bsHostLomem = (flags & BS_INIT_ADFS ? 0x1600 : 0x1100);
     bsMouseColour = bsNula ? 15 : 7;
 
+    // Use same routine we've made external
+    beebScreen_SetMode(mode);
+
     if (bsNula)
     {
         _swi(OS_Byte,_INR(0,2),151,34,0x80);
         _swi(OS_Byte,_INR(0,2),151,34,0x90);
     }
-
+    if (bsPiVdu)
+    {
+        int vars[2] = {148, -1};
+        _swi(OS_ReadVduVariables,_INR(0,1),&vars,&piVduBuffer);
+    }
 }
 
 void beebScreen_InjectCode(unsigned char *code, int length,int dest)
@@ -505,38 +563,55 @@ void beebScreen_SetGeometry(int w,int h,int setCrtc)
     bsScreenWidth = w;
     bsScreenHeight = h;
     
-    int crtW = w;
-
-    switch(bsColours)
+    if (bsPiVdu)
     {
-    case 2:
-        crtW >>=3;
-        break;
-    case 4:
-        crtW >>=2;
-        break;
-    case 16:
-        crtW >>=1;
-        break;
-    }
-    if (!setCrtc)
-        return;
-    if (bsMode <4)
-    {
-        sendCrtc(1,crtW);
-        int pos=18+crtW+((80-crtW)/2);
-        sendCrtc(2,pos);
+        // TODO - Set screen geometry
+        _VDU(23);
+        _VDU(22);
+        _VDU(w%256);
+        _VDU(w>>8);
+        _VDU(h%256);
+        _VDU(h>>8);
+        _VDU(0);
+        _VDU(0);
+        _VDU(0);
+        _VDU(0);
     }
     else
     {
-        sendCrtc(1,crtW);
-        int pos=9+crtW+((40-crtW)/2);
-        sendCrtc(2,pos);
+        int crtW = w;
+
+        switch(bsColours)
+        {
+        case 2:
+            crtW >>=3;
+            break;
+        case 4:
+            crtW >>=2;
+            break;
+        case 16:
+            crtW >>=1;
+            break;
+        }
+        if (!setCrtc)
+            return;
+        if (bsMode <4)
+        {
+            sendCrtc(1,crtW);
+            int pos=18+crtW+((80-crtW)/2);
+            sendCrtc(2,pos);
+        }
+        else
+        {
+            sendCrtc(1,crtW);
+            int pos=9+crtW+((40-crtW)/2);
+            sendCrtc(2,pos);
+        }
+        int crtH = h>>3;    
+        sendCrtc(6,crtH);
+        int hpos=34 - ((32-crtH)/2);
+        sendCrtc(7,hpos);
     }
-    int crtH = h>>3;    
-    sendCrtc(6,crtH);
-    int hpos=34 - ((32-crtH)/2);
-    sendCrtc(7,hpos);
 }
 
 void beebScreen_SetScreenBase(int address,int secondBuffer)
@@ -1026,6 +1101,24 @@ void addMouseCursor(unsigned char *beebBuffer)
     }
 }
 
+#define ADD_BUFFER(value) *p=value; p+=8;
+
+void addHdmiPal(unsigned char *beebBuffer)
+{
+    char *p=beebBuffer;
+    ADD_BUFFER('H');
+    ADD_BUFFER('D');
+    ADD_BUFFER('M');
+    ADD_BUFFER('I');
+    ADD_BUFFER(2*bsHdmiCols);
+    for(int i=0;i<bsHdmiCols;++i)
+    {
+        ADD_BUFFER(bsHdmiPal[i]&0xff);
+        ADD_BUFFER(bsHdmiPal[i]>>8);
+    }
+}
+
+
 unsigned char compBuffer[32768];
 int compBuffPtr=0;
 int outBuffPtr=0;
@@ -1124,49 +1217,70 @@ void updateMouse()
 
 void beebScreen_Flip()
 {  
-    // TODO - Add flip screen code
-    switch(bsMode)
+    if (bsPiVdu)
     {
-        case 0:
-        case 4:
-        case 3:
-        case 6:
-            // Only really makes sense to dither in mode 0,3,4 or 6
-            convert2Dither(bsRemap);
-            break;
-        case 1:
-        case 5:
-            if (bsNula)
-                convert4Col(bsNulaRemap);
-            else
-                convert4Dither(bsRemap);
-            break;
-        case 2:
-            if (bsNula)
-                convert16Col(bsNulaRemap);
-            else
-                convert16Dither(bsRemap);
-            break;
-    }
-    if (bsMouse)
-    {
-        updateMouse();
-        if (bsShowPointer)
+        if (bsCallback)
         {
-            addMouseCursor(beebBuffer);
+            bsCallback();
         }
-    }
-    beebScreen_CompressAndCopy(beebBuffer,backBuffer[bsCurrentFrame]);
-    memcpy(backBuffer[bsCurrentFrame],beebBuffer,bsBufferSize);
-
-    if (bsCallback)
-    {
-        bsCallback();
+        else
+        {
+            // If we've not got a callback then wait for the next VSync
+            beebScreen_VSync();
+        }
+        // Copy to frame buffer
+        memcpy(backBuffer[bsCurrentFrame], bsBuffer, bsBufferSize);
     }
     else
     {
-        // If we've not got a callback then wait for the next VSync
-        beebScreen_VSync();
+        // TODO - Add flip screen code
+        switch(bsMode)
+        {
+            case 0:
+            case 4:
+            case 3:
+            case 6:
+                // Only really makes sense to dither in mode 0,3,4 or 6
+                convert2Dither(bsRemap);
+                break;
+            case 1:
+            case 5:
+                if (bsNula)
+                    convert4Col(bsNulaRemap);
+                else
+                    convert4Dither(bsRemap);
+                break;
+            case 2:
+                if (bsNula)
+                    convert16Col(bsNulaRemap);
+                else
+                    convert16Dither(bsRemap);
+                break;
+        }
+        if (bsMouse)
+        {
+            updateMouse();
+            if (bsShowPointer)
+            {
+                addMouseCursor(beebBuffer);
+            }
+        }
+        if (bsRgb2Hdmi && bsMode == 2)
+        {
+            addHdmiPal(beebBuffer);
+        }   
+        beebScreen_CompressAndCopy(beebBuffer,backBuffer[bsCurrentFrame]);
+        memcpy(backBuffer[bsCurrentFrame],beebBuffer,bsBufferSize);
+
+        if (bsCallback)
+        {
+            bsCallback();
+        }
+        else
+        {
+            // If we've not got a callback then wait for the next VSync
+            beebScreen_VSync();
+        }
     }
 
     // Swap buffers if we're double buffering

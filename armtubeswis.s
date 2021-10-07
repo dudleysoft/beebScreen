@@ -46,6 +46,7 @@
         OS_ReadLine             = 0x0E
         OS_CLI                  = 0x05
         OS_MMUControl           = 0x6b
+        OS_ReadVduVariables     = 0x31
 
         USRStackSize            = 32768
         V_bit                   = 1 << 28
@@ -131,6 +132,8 @@ _swi:
         BEQ     _OS_CLI
         CMP     r12, #OS_MMUControl
         BEQ     _OS_MMUControl
+        CMP     r12, #OS_ReadVduVariables
+        BEQ     _OS_ReadVduVariables
 
         CMP     r12, #OS_WriteI
         BGE     _OS_WriteI
@@ -264,4 +267,8 @@ _VDU:
 
 _OS_MMUControl:
         SWI OS_MMUControl
+        B swret
+
+_OS_ReadVduVariables:
+        SWI OS_ReadVduVariables
         B swret

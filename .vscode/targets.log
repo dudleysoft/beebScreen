@@ -8,7 +8,7 @@ make: *** No rule to make target 'all'.  Stop.
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Mon Jul 05 08:59:43 2021
+# Make data base, printed on Thu Oct 07 19:01:57 2021
 
 # Variables
 
@@ -25,7 +25,7 @@ USERPROFILE = C:\Users\dudle
 # environment
 LOCALAPPDATA = C:\Users\dudle\AppData\Local
 # environment
-VSCODE_IPC_HOOK_EXTHOST = \\.\pipe\vscode-ipc-20029bb9-7ee5-4a28-9306-c971421711a6-sock
+VSCODE_IPC_HOOK_EXTHOST = \\.\pipe\vscode-ipc-d4eba172-b722-442d-93d2-24ca35e7db8f-sock
 # environment
 VSCODE_CWD = C:\Users\dudle\AppData\Local\Programs\Microsoft VS Code
 # environment
@@ -41,7 +41,7 @@ MAKE_COMMAND := C:/ProgramData/chocolatey/lib/make/tools/install/bin/make.exe
 # automatic
 @D = $(patsubst %/,%,$(patsubst %\,%,$(dir $@)))
 # environment
-CHROME_CRASHPAD_PIPE_NAME = \\.\pipe\crashpad_13204_SRJWIJGUUDOYWWVH
+CHROME_CRASHPAD_PIPE_NAME = \\.\pipe\crashpad_19952_NXGBVLHRRTPCCSIJ
 # environment
 VSCODE_HANDLES_UNCAUGHT_ERRORS = true
 # default
@@ -54,6 +54,8 @@ VSCODE_HANDLES_UNCAUGHT_ERRORS = true
 VSCODE_LOG_STACK = false
 # automatic
 %F = $(notdir $%)
+# environment
+VSCODE_CODE_CACHE_PATH = C:\Users\dudle\AppData\Roaming\Code\CachedData\7f6ab5485bbc008386c4386d08766667e155244e
 # environment
 LANG = C
 # default
@@ -93,7 +95,7 @@ MAKEFILE_LIST := Makefile
 # environment
 VSCODE_VERBOSE_LOGGING = true
 # environment
-VSCODE_PID = 13204
+VSCODE_PID = 19952
 # automatic
 ?D = $(patsubst %/,%,$(patsubst %\,%,$(dir $?)))
 # automatic
@@ -109,8 +111,7 @@ ONEDRIVECONSUMER = C:\Users\dudle\OneDrive
 # default
 MAKE_HOST := Windows32
 # environment
-PROGRAMDATA = C:\ 
-ProgramData
+PROGRAMDATA = C:\ProgramData
 # default
 SHELL := C:/Program Files/Git/usr/bin/sh.exe
 # environment
@@ -190,8 +191,6 @@ NUMBER_OF_PROCESSORS = 12
 # environment
 PUBLIC = C:\Users\Public
 # environment
-VSCODE_NODE_CACHED_DATA_DIR = C:\Users\dudle\AppData\Roaming\Code\CachedData\507ce72a4466fbb27b715c3722558bb15afa9f48
-# environment
 ZGB_PATH = d:\ZGB_master\common
 # environment
 APPDATA = C:\Users\dudle\AppData\Roaming
@@ -210,7 +209,7 @@ ELECTRON_RUN_AS_NODE = 1
 # makefile (from 'Makefile', line 10)
 TEMP = temp
 # environment
-VSCODE_IPC_HOOK = \\.\pipe\c92adc0de03cace00f1934fa490e8cc4-1.57.1-main-sock
+VSCODE_IPC_HOOK = \\.\pipe\c92adc0de03cace00f1934fa490e8cc4-1.60.2-main-sock
 # default
 .RECIPEPREFIX := 
 # automatic
@@ -236,8 +235,7 @@ CC = arm-none-eabi-gcc
 # makefile (from 'Makefile', line 5)
 OBJCOPY = arm-none-eabi-objcopy
 # makefile (from 'Makefile', line 23)
-LD_FLAGS := -Wl,--gc-sections -Wl,--no-print-gc-sections -Wl,-T,rpi.X -Wl 
-,-lm
+LD_FLAGS := -Wl,--gc-sections -Wl,--no-print-gc-sections -Wl,-T,rpi.X -Wl,-lm
 # environment
 PROCESSOR_IDENTIFIER = AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD
 # variable set hash-table stats:
@@ -249,7 +247,7 @@ PROCESSOR_IDENTIFIER = AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD
 
 # Directories
 
-# . (key d:/Beeb/beebScreen, mtime 1625399121): 39 files, no impossibilities.
+# . (key d:/Beeb/beebScreen, mtime 1632427191): 39 files, no impossibilities.
 
 # 39 files, no impossibilities in 1 directories.
 
@@ -280,7 +278,8 @@ armc-start.o:
 depclean:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
-#  File has not been updated.
+#  File  
+has not been updated.
 #  recipe to execute (from 'Makefile', line 63):
 	$(RM) $(OBJ:.o=.d)
 
@@ -418,7 +417,6 @@ beebScreen/extraCode.bin: beebScreen/beebCode.asm
 # strcache performance: lookups = 93 / hit rate = 37%
 # hash-table stats:
 # Load=58/8192=1%, Rehash=0, Collisions=0/93=0%
-# Finished Make data base on 
- Mon Jul 05 08:59:43 2021
+# Finished Make data base on Thu Oct 07 19:01:57 2021
 
  
