@@ -169,7 +169,7 @@ extern void beebScreen_SetMode(int mode);
 #define BS_INIT_MOUSE (4)           //!< Enable mouse reading
 #define BS_INIT_ADFS (8)            //!< Enable ADFS memory on the host
 #define BS_INIT_RGB2HDMI (16)       //!< Enabled RGB2HDMI video output mode
-#define BS_INIT_PIUVDU (32)         //!< Enabled PiVdu video frame buffer
+#define BS_INIT_PIVDU (32)          //!< Enabled PiVdu video frame buffer
 
 #define BS_INIT_ALL (0xff)          //!< Initialise everything
 

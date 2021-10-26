@@ -207,6 +207,14 @@ void beebScreen_SendPal(int *pal,int count)
             _VDU(pal[i]>>8);
         }
     }
+    else if (bsRgb2Hdmi)
+    {
+        bsHdmiCols = count > 16 ? 16 : count;
+        for(int i=0;i<bsHdmiCols;++i)
+        {
+            bsHdmiPal[i]=pal[i];
+        }
+    }
     else if (bsPiVdu)
     {
         for(int i=0;i<count;++i)
@@ -215,21 +223,12 @@ void beebScreen_SendPal(int *pal,int count)
             _VDU(i);
             _VDU(16);
             _VDU((pal[i]&0x0f)<<4);
-            _VDU((pal[i]&0x0f00)>>4);
             _VDU((pal[i]>>8)&0xf0);
+            _VDU((pal[i]&0x0f00)>>4);
         }
     }
     else
     {
-        if (bsRgb2Hdmi)
-        {
-            bsHdmiCols = count > 16 ? 16 : count;
-            for(int i=0;i<bsHdmiCols;++i)
-            {
-                bsHdmiPal[i]=pal[i];
-            }
-        }
-
         switch(bsMode)
         {
             // 2 colour modes, we'll map to a greyscale dither pattern
@@ -367,8 +366,11 @@ void sendCrtc(int reg,int value)
 
 void sendScreenbase(int addr)
 {
-    sendCrtc(13,(addr>>3) &0x0ff);
-    sendCrtc(12,addr>>11);
+    if (!bsPiVdu)
+    {
+        sendCrtc(13, (addr >> 3) &0x0ff);
+        sendCrtc(12, addr >> 11);
+    }
 }
 
 void beebScreen_SetMode(int mode)
@@ -390,7 +392,14 @@ void beebScreen_SetMode(int mode)
     // _VDU(22);
     // _VDU(mode);
     // // Turn off cursor
-    sendCrtc(10,32);
+    if (!bsPiVdu)
+    {
+        sendCrtc(10, 32);
+    }
+    else
+    {
+        _VDU(23);_VDU(1);_VDU(0);_VDU(0);_VDU(0);_VDU(0);_VDU(0);_VDU(0);_VDU(0);_VDU(0);
+    }
 
     switch(mode)
     {
@@ -464,47 +473,59 @@ void beebScreen_SetMode(int mode)
 
     bsBuffer = NULL;
 
-    memset(backBuffer[0],0,bufferSize);
-
-    if (bsDoubleBuffer)
+    if (!bsPiVdu)
     {
-        memset(backBuffer[1],0,bufferSize);
+        memset(backBuffer[0],0,bufferSize);
+
+        if (bsDoubleBuffer)
+        {
+            memset(backBuffer[1],0,bufferSize);
+        }
+        sendScreenbase(bsScreenBase[0]);
     }
+
     bsBufferSize = bufferSize;
-    
-    sendScreenbase(bsScreenBase[0]);
 }
 
 void beebScreen_Init(int mode, int flags)
 {
     unsigned char *beebCheck[256];
-    // Copy our assembler code to the host
-    memcpytoio_slow((void*)beebCodeBase,beebCode_bin,beebCode_bin_len);
-
-    // Copy old WRCHV value into our code
-    int wrchv = ReadByteFromIo((void*)WRCHV) + (ReadByteFromIo((void*)&WRCHV[1])<<8);
-
-    WriteByteToIo((void*)&beebCodeBase[4],wrchv & 0xff);
-    WriteByteToIo((void*)&beebCodeBase[5],wrchv >> 8);
-
-    // Point the WRCHV to our code
-    WriteByteToIo((void*)WRCHV,((int)beebCodeBase)&0xff);
-    WriteByteToIo((void*)&WRCHV[1],((int)beebCodeBase)>>8);
-
-
-    // Turn off cursor editing
-    _swi(OS_Byte,_INR(0,1),4,1);
-    // Break clears memory and escape disabled
-    _swi(OS_Byte,_INR(0,1),200,3);
-    // Set ESCAPE to generate the key value
-    _swi(OS_Byte,_INR(0,1),229,1);
-
 
     bsNula = flags & BS_INIT_NULA;
     bsRgb2Hdmi = flags & BS_INIT_RGB2HDMI;
-    bsPiVdu = flags & BS_INIT_PIUVDU;
+    bsPiVdu = flags & BS_INIT_PIVDU;
     bsDoubleBuffer = flags & BS_INIT_DOUBLE_BUFFER;
     bsMouse = flags & BS_INIT_MOUSE;
+
+    if (!bsPiVdu)
+    {
+        // Copy our assembler code to the host
+        memcpytoio_slow((void*)beebCodeBase,beebCode_bin,beebCode_bin_len);
+
+        // Copy old WRCHV value into our code
+        int wrchv = ReadByteFromIo((void*)WRCHV) + (ReadByteFromIo((void*)&WRCHV[1])<<8);
+
+        WriteByteToIo((void*)&beebCodeBase[4],wrchv & 0xff);
+        WriteByteToIo((void*)&beebCodeBase[5],wrchv >> 8);
+
+        // Point the WRCHV to our code
+        WriteByteToIo((void*)WRCHV,((int)beebCodeBase)&0xff);
+        WriteByteToIo((void*)&WRCHV[1],((int)beebCodeBase)>>8);
+    }
+    else
+    {
+        // We need to change to pivdu 2 to only output vdu codes to the frame buffer
+        // otherwise all vdu codes will be sent to the host, this makes palette changes very slow :'(
+        _swi(OS_CLI,_IN(0),"PIVDU 2");
+    }
+
+    // Turn off cursor editing
+    _swi(OS_Byte, _INR(0, 1), 4, 1);
+    // Break clears memory and escape disabled
+    _swi(OS_Byte, _INR(0, 1), 200, 3);
+    // Set ESCAPE to generate the key value
+    _swi(OS_Byte, _INR(0, 1), 229, 1);
+
     bsShowPointer = 0;
     bsCurrentFrame = 0;
     bsFrameCounter = 0;
@@ -517,13 +538,13 @@ void beebScreen_Init(int mode, int flags)
 
     if (bsNula)
     {
-        _swi(OS_Byte,_INR(0,2),151,34,0x80);
-        _swi(OS_Byte,_INR(0,2),151,34,0x90);
+        _swi(OS_Byte, _INR(0, 2), 151, 34, 0x80);
+        _swi(OS_Byte, _INR(0, 2), 151, 34, 0x90);
     }
     if (bsPiVdu)
     {
         int vars[2] = {148, -1};
-        _swi(OS_ReadVduVariables,_INR(0,1),&vars,&piVduBuffer);
+        _swi(OS_ReadVduVariables,_INR(0,1), &vars, &piVduBuffer);
     }
 }
 
@@ -565,17 +586,34 @@ void beebScreen_SetGeometry(int w,int h,int setCrtc)
     
     if (bsPiVdu)
     {
-        // TODO - Set screen geometry
+        // Setup screen geometry
         _VDU(23);
         _VDU(22);
-        _VDU(w%256);
+        _VDU(w%256);    // Width
         _VDU(w>>8);
-        _VDU(h%256);
-        _VDU(h>>8);
+        _VDU(h%256);    // Height
+        _VDU(h>>8);     // Width in chars
+        _VDU(w>>3);     // Height in chars
+        _VDU(h>>3);
+        _VDU(0);    // Colours (0 for 256)
+        _VDU(0);    // flags (0 default)
+        // Turn off cursor
+        _VDU(23);
+        _VDU(1);
         _VDU(0);
         _VDU(0);
         _VDU(0);
         _VDU(0);
+        _VDU(0);
+        _VDU(0);
+        _VDU(0);
+        _VDU(0);
+
+        bsBufferSize = w*h;
+
+        // Read buffer start address
+        int vars[2] = {148, -1};
+        _swi(OS_ReadVduVariables,_INR(0,1), &vars, &piVduBuffer);
     }
     else
     {
@@ -593,8 +631,10 @@ void beebScreen_SetGeometry(int w,int h,int setCrtc)
             crtW >>=1;
             break;
         }
+
         if (!setCrtc)
             return;
+
         if (bsMode <4)
         {
             sendCrtc(1,crtW);
@@ -967,8 +1007,8 @@ void convert16Col(unsigned char *map)
 		}
 		yPos+=Ystep;
         line++;
-
-	} while (line < bsScreenHeight);
+	} 
+    while (line < bsScreenHeight);
 }
 
 void convert16Dither(unsigned char *map)
@@ -1215,6 +1255,30 @@ void updateMouse()
     }
 }
 
+void addPiCursor(unsigned char *buffer)
+{
+    int Xstep = 1;
+    int Ystep = 1;
+    int mx = (bsMouseX * bsScreenWidth / 1280);
+    int my = bsScreenHeight - (bsMouseY * bsScreenHeight / 1024);
+
+    int ptrColour[]={0,bsMouseColour,0};//{0, bsNula ? 15 : 7, 0};
+
+    for(int y = my; y< bsScreenHeight & y < my+12; ++y)
+    {
+        unsigned char *ptr=&ptrData[(y-my)*8];
+
+        for(int x = mx; x < bsScreenWidth & x < mx+8; ++x)
+        {
+            int c=*ptr++;
+            if (c)
+            {
+                buffer[y*bsScreenWidth + x]=ptrColour[c];
+            }
+        }
+    }    
+}
+
 void beebScreen_Flip()
 {  
     if (bsPiVdu)
@@ -1228,8 +1292,15 @@ void beebScreen_Flip()
             // If we've not got a callback then wait for the next VSync
             beebScreen_VSync();
         }
+        static unsigned char c=0;
         // Copy to frame buffer
-        memcpy(backBuffer[bsCurrentFrame], bsBuffer, bsBufferSize);
+        // memset(piVduBuffer, c++, bsScreenWidth * bsScreenHeight);
+        memcpy(piVduBuffer, bsBuffer, bsBufferSize);
+
+        if (bsShowPointer)
+        {
+            addPiCursor(piVduBuffer);
+        }
     }
     else
     {
@@ -1243,15 +1314,17 @@ void beebScreen_Flip()
                 // Only really makes sense to dither in mode 0,3,4 or 6
                 convert2Dither(bsRemap);
                 break;
+
             case 1:
             case 5:
-                if (bsNula)
+                if (bsNula || bsRgb2Hdmi)
                     convert4Col(bsNulaRemap);
                 else
                     convert4Dither(bsRemap);
                 break;
+
             case 2:
-                if (bsNula)
+                if (bsNula || bsRgb2Hdmi)
                     convert16Col(bsNulaRemap);
                 else
                     convert16Dither(bsRemap);
@@ -1296,7 +1369,16 @@ void beebScreen_VSync()
     _swi(OS_Byte,_IN(0),19);
 
     // Read frame counter from the beeb
-    bsFrameCounter = ReadByteFromIo((void*)0x6d);
+    if (bsPiVdu)
+    {
+        int block[2];
+        _swi(OS_Word,_INR(0,1),1,block);
+        bsFrameCounter = (block[0]>>1)&0xff;
+    }
+    else
+    {
+        bsFrameCounter = ReadByteFromIo((void*)0x6d);
+    }
 }
 
 void beebScreen_Quit()
