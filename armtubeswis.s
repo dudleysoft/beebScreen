@@ -48,6 +48,7 @@
         OS_CLI                  = 0x05
         OS_MMUControl           = 0x6b
         OS_ReadVduVariables     = 0x31
+        OS_File                 = 0x08
 
 
         USRStackSize            = 32768
@@ -136,12 +137,19 @@ _swi:
         BEQ     _OS_MMUControl
         CMP     r12, #OS_ReadVduVariables
         BEQ     _OS_ReadVduVariables
+        CMP     r12, #OS_File
+        BEQ     _OS_File
 
         CMP     r12, #OS_WriteI
         BGE     _OS_WriteI
 
+        ORR     r12,r12,#0xef000000
+        STRNE   r10,swiloc
+        B       swiloc
+
         // otherwise use callaswir12 (unimplemented so report num in R0)
- unswi: MOV     R0, R12 
+unswi:  MOV     R0, R12 
+swiloc:
         SWI     XOS_CallASWIR12         
 
         // Keep flags and X bit
@@ -222,7 +230,6 @@ b40:
         ADD     r13, r13, #8
         MOV     pc, lr
 
-
 _exit:
         // Exit
         SWI     OS_Exit
@@ -251,6 +258,10 @@ _OS_GBPB:
 _OS_ReadC:
 	SWI OS_ReadC
 	B swret
+_OS_File:
+        SWI OS_File
+        B swret
+
 _OS_ReadLine:
      SWI OS_ReadLine
      B swret

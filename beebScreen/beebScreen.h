@@ -332,6 +332,13 @@ extern unsigned char beebScreen_GetFrameCounter();
  */
 extern int beebScreen_ScanKey(int key);
 
+/**
+ * Switches beebScreen's processing mode without switching video mode, will recalculate the screen geometry to match the new 
+ * modes pixel resolution.
+ * @param newMode - Mode to switch processing to
+ */
+extern void beebScreen_SwitchMode(int newMode);
+
 #ifdef __cplusplus
 }
 #endif

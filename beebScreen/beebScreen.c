@@ -24,6 +24,7 @@ int bsMouseX;
 int bsMouseY;
 int bsMouseB;
 int bsMouseColour;
+int bsKeyScans[256];
 
 unsigned char *bsBuffer;
 int bsBufferW;
@@ -44,6 +45,9 @@ unsigned char *beebCodeBase=(unsigned char*)0xc00;
 #define USER2V (10)
 #define VSYNCV (13)
 #define TIMERV (16)
+
+#define KEY_SCANNED (2)
+#define KEY_PRESSED (1)
 
 void beebScreen_extractRGB444(int v,int *r,int *g,int *b)
 {
@@ -373,6 +377,17 @@ void sendScreenbase(int addr)
     }
 }
 
+void beebScreen_SwitchMode(int newMode)
+{
+    int pixelRatio[]={1,2,4,1,2,4,2,1};
+    int colours[]={2,4,16,2,2,4,2,0};
+
+    bsScreenWidth=bsScreenWidth * pixelRatio[bsMode & 7] / pixelRatio[newMode & 7];
+    bsColours = colours[newMode];
+
+    bsMode = newMode;
+}
+
 void beebScreen_SetMode(int mode)
 {
     bsMode = mode;
@@ -547,6 +562,10 @@ void beebScreen_Init(int mode, int flags)
         int vars[2] = {148, -1};
         _swi(OS_ReadVduVariables,_INR(0,1), &vars, &piVduBuffer);
     }
+
+    memset(bsKeyScans,0,sizeof(bsKeyScans));
+    // Make sure key code 127 is marked as scanned since Atomulator will request it
+    bsKeyScans[127]=KEY_PRESSED;
 }
 
 void beebScreen_InjectCode(unsigned char *code, int length,int dest)
@@ -1365,6 +1384,10 @@ void beebScreen_Flip()
         bsCurrentFrame=1-bsCurrentFrame;
         sendScreenbase(bsScreenBase[bsCurrentFrame]);
     }
+
+    // Reset keyboard scan values
+    memset(bsKeyScans,0,sizeof(bsKeyScans));
+    bsKeyScans[127]=KEY_PRESSED;
 }
 
 void beebScreen_VSync()
@@ -1435,6 +1458,10 @@ unsigned char beebScreen_GetFrameCounter()
 
 int beebScreen_ScanKey(int key)
 {
+    if (bsKeyScans[key] & KEY_SCANNED)
+    {
+        return bsKeyScans[key] & KEY_PRESSED;
+    }
     int x,y;
 
     _swi(OS_Byte,_INR(0,2)|_OUTR(1,2),129,0xff-key,0xff,&x,&y);
@@ -1443,7 +1470,9 @@ int beebScreen_ScanKey(int key)
     x |= (y<<8);
 
     // Checks if we've returned 0xFF in both
-    return (x == 0xffff) ? 1 : 0;
+    bsKeyScans[key] = (KEY_SCANNED) | ((x == 0xffff) ? KEY_PRESSED : 0);
+
+    return bsKeyScans[key] & KEY_PRESSED;
 }
 
 void beebScreen_SetMouseColour(int colour)
