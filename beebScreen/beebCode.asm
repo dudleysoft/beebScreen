@@ -188,6 +188,34 @@ soundTemp = &64
     sta &da8
     lda #BS_CMD_SEND_USER1
     rts
+
+    org &920
+.readKeys
+	ENABLEKEY
+	ldy #8
+.keyLoop
+	ldx HOST_TUBE_R1DATA
+	stx &FE4F
+	asl &FE4F
+	ror a
+	dey
+	bne keyLoop
+
+    ;sta &70
+
+    ldx HOST_TUBE_R2DATA
+    ldx #0
+    stx HOST_TUBE_R2DATA
+.waitTube
+    ldx HOST_TUBE_R2STAT
+    bmi waitTube
+    sta HOST_TUBE_R2DATA
+
+	DISABLEKEY
+
+    lda #BS_CMD_SEND_USER2
+    rts
+
     ; Sends a block of sample data to be written to the fifo buffer
 .extraEnd
 

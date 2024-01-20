@@ -146,6 +146,20 @@ extern int beebScreen_CreatePalMap(int *pal,int count,unsigned char *map);
 extern void beebScreen_CreateDynamicPalette(int* inPal,unsigned char *palMap,int colours,int *outPal,int target);
 
 /**
+ * Creates a dynamic palette from the current palette, also creates internal remap palette.
+ * This routine will try to assign colours in the existing internal palette to the same colour where
+ * possible to minimise the changes between frames caused by the dynamic palette.
+ * Works best when combined with beebScreen_CreatePalMap() to create a map to unique palette colours
+ * in the current palette.
+ * @param inPal - Source palette
+ * @param palMap - Remap from original palette to unique NULA colours
+ * @param colours - Number of colours in the original palette (not the remap)
+ * @param outPal - Target palette
+ * @param target - Number of target colours
+ */
+void beebScreen_CreateDynamicPaletteMatch(int* inPal,unsigned char *palMap,int colours,int *outPal,int target);
+
+/**
  * Sends a set of NULA palette values to the host, also required when using non-NULA mode to set the colours
  * to map from for dithering in 2 colour and 16 colour modes.
  * @param pal - Array of palette entries
@@ -319,6 +333,12 @@ extern void beebScreen_GetMouse(int *x,int *y,int *b);
 extern void beebScreen_ShowPointer(int show);
 
 /**
+ * Sets the colour to use for the outline of the mouse
+ * @param colour - Colour index to use for the mouse
+ */
+extern void beebScreen_SetMouseColour(int colour);
+
+/**
  * Returns the host side internal frame counter, this runs from 0 to 255
  * and is incremented every vsync, you need to call beebScreen_VSync() or beebScreen_Flip() for this value
  * to be updated from the host's memory.
@@ -331,13 +351,6 @@ extern unsigned char beebScreen_GetFrameCounter();
  * @param key - key code to scan for
  */
 extern int beebScreen_ScanKey(int key);
-
-/**
- * Switches beebScreen's processing mode without switching video mode, will recalculate the screen geometry to match the new 
- * modes pixel resolution.
- * @param newMode - Mode to switch processing to
- */
-extern void beebScreen_SwitchMode(int newMode);
 
 #ifdef __cplusplus
 }

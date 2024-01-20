@@ -24,7 +24,6 @@ int bsMouseX;
 int bsMouseY;
 int bsMouseB;
 int bsMouseColour;
-int bsKeyScans[256];
 
 unsigned char *bsBuffer;
 int bsBufferW;
@@ -45,9 +44,6 @@ unsigned char *beebCodeBase=(unsigned char*)0xc00;
 #define USER2V (10)
 #define VSYNCV (13)
 #define TIMERV (16)
-
-#define KEY_SCANNED (2)
-#define KEY_PRESSED (1)
 
 void beebScreen_extractRGB444(int v,int *r,int *g,int *b)
 {
@@ -358,6 +354,82 @@ void beebScreen_CreateDynamicPalette(int* inPal,unsigned char *palMap,int colour
 	beebScreen_CreateRemapColours(inPal,outPal,target,colours);
 }
 
+void beebScreen_CreateDynamicPaletteMatch(int* inPal,unsigned char *palMap,int colours,int *outPal,int target)
+{
+	int counts[colours];
+	int most[target];
+
+	// clear counts
+	memset(counts, 0, colours * sizeof(int));
+
+	// count unique palette colours, note that non-unique palette entries will
+	// count all different values, luckily remap will remap them back to the first reference
+	unsigned char *p=bsBuffer;
+	for(int i = 0; i < bsBufferW * bsBufferH; ++i)
+	{
+		int col=palMap ? palMap[*p++] : *p++;
+		counts[col]++;
+	}
+
+	int used[target];
+	int allocated[target];
+
+	// Count the most populous colours
+	for(int i = 0; i < target; ++i)
+	{
+		int found = 0;
+		int max = counts[0];
+
+		for(int j = 1; j < colours; ++j)
+		{
+			if (counts[j] > max)
+			{
+				max = counts[j];
+				found = j;
+			}
+		}
+		most[i] = found;
+		counts[found] = 0;
+		used[i] = FALSE;
+		allocated[i] = FALSE;
+	}
+
+	// Find palette entries already in use (try to speed up transfer)
+	for(int i = 0; i < target; ++i)
+	{
+        for(int j = 0; j < target; ++j)
+        {
+            // Use the previous palette to check for the previous colour
+            if ((outPal[j] &0xff0f) == (inPal[most[i]] &0xff0f))
+            {
+                allocated[i] = TRUE;
+                used[j] = TRUE;
+                // Update palette (makes pal change work without distrupting the display)
+                outPal[j] = (inPal[most[i]] & 0xff0f) | (j<<4);
+                j=16;
+            }
+        }
+	}
+
+	// Find space for the remaining colours
+	for(int i = 0; i < 16; ++i)
+	{
+		int j=0;
+		if (!allocated[i])
+		{
+			// Find the first unused slot
+			while((j < 16) && used[j]) j++;
+
+			// Place the palette
+			outPal[j] = (inPal[most[i]] & 0xff0f) | (j<<4);
+			lastPalIndices[j] = most[i];
+			used[j] = TRUE;
+		}
+	}
+
+	beebScreen_CreateRemapColours(inPal,outPal,target,colours);
+}
+
 void sendCrtc(int reg,int value)
 {
     if (!bsPiVdu)
@@ -375,17 +447,6 @@ void sendScreenbase(int addr)
         sendCrtc(13, (addr >> 3) &0x0ff);
         sendCrtc(12, addr >> 11);
     }
-}
-
-void beebScreen_SwitchMode(int newMode)
-{
-    int pixelRatio[]={1,2,4,1,2,4,2,1};
-    int colours[]={2,4,16,2,2,4,2,0};
-
-    bsScreenWidth=bsScreenWidth * pixelRatio[bsMode & 7] / pixelRatio[newMode & 7];
-    bsColours = colours[newMode];
-
-    bsMode = newMode;
 }
 
 void beebScreen_SetMode(int mode)
@@ -562,10 +623,6 @@ void beebScreen_Init(int mode, int flags)
         int vars[2] = {148, -1};
         _swi(OS_ReadVduVariables,_INR(0,1), &vars, &piVduBuffer);
     }
-
-    memset(bsKeyScans,0,sizeof(bsKeyScans));
-    // Make sure key code 127 is marked as scanned since Atomulator will request it
-    bsKeyScans[127]=KEY_PRESSED;
 }
 
 void beebScreen_InjectCode(unsigned char *code, int length,int dest)
@@ -1384,10 +1441,6 @@ void beebScreen_Flip()
         bsCurrentFrame=1-bsCurrentFrame;
         sendScreenbase(bsScreenBase[bsCurrentFrame]);
     }
-
-    // Reset keyboard scan values
-    memset(bsKeyScans,0,sizeof(bsKeyScans));
-    bsKeyScans[127]=KEY_PRESSED;
 }
 
 void beebScreen_VSync()
@@ -1458,10 +1511,6 @@ unsigned char beebScreen_GetFrameCounter()
 
 int beebScreen_ScanKey(int key)
 {
-    if (bsKeyScans[key] & KEY_SCANNED)
-    {
-        return bsKeyScans[key] & KEY_PRESSED;
-    }
     int x,y;
 
     _swi(OS_Byte,_INR(0,2)|_OUTR(1,2),129,0xff-key,0xff,&x,&y);
@@ -1470,9 +1519,7 @@ int beebScreen_ScanKey(int key)
     x |= (y<<8);
 
     // Checks if we've returned 0xFF in both
-    bsKeyScans[key] = (KEY_SCANNED) | ((x == 0xffff) ? KEY_PRESSED : 0);
-
-    return bsKeyScans[key] & KEY_PRESSED;
+    return (x == 0xffff) ? 1 : 0;
 }
 
 void beebScreen_SetMouseColour(int colour)

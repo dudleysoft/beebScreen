@@ -48,10 +48,10 @@ beebScreen/beebScreen.o: beebScreen/beebScreen.c beebScreen/beebCode.c beebScree
 	$(CC) $(CFLAGS) -c beebScreen/beebScreen.c -o beebScreen/beebScreen.o
 
 beebScreen/beebCode.c: beebScreen/beebCode.bin
-	cd beebScreen; ./mkasm.bat
+	cd beebScreen; ./mkasm
 
 beebScreen/extraCode.c: beebScreen/beebCode.asm beebScreen/extraCode.bin
-	cd beebScreen; ./mkasm.bat
+	cd beebScreen; ./mkasm
 
 beebScreen/beebCode.bin: beebScreen/beebCode.asm
 
